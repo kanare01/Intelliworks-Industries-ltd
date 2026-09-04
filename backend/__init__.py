@@ -1,0 +1,63 @@
+"""
+INTELLIWORKS INDUSTRIES — BACKEND PACKAGE
+"""
+from backend.app import (
+    app,
+    create_app,
+    get_supabase_admin_client,
+    db_get_record,
+    db_list_records,
+    db_insert_record,
+    db_update_record,
+    db_delete_record,
+    get_user_by_id,
+    get_user_by_email,
+    create_user_record,
+    update_user_record,
+    delete_user_record,
+    list_users_records,
+    create_user,
+    update_user,
+    delete_user,
+    list_users,
+    get_assignment_by_id,
+    create_assignment_record,
+    update_assignment_record,
+    delete_assignment_record,
+    list_assignments_records,
+    create_assignment,
+    update_assignment,
+    delete_assignment,
+    list_assignments
+)
+
+__all__ = [
+    "app",
+    "create_app",
+    "get_supabase_admin_client",
+    "db_get_record",
+    "db_list_records",
+    "db_insert_record",
+    "db_update_record",
+    "db_delete_record",
+    "get_user_by_id",
+    "get_user_by_email",
+    "create_user_record",
+    "update_user_record",
+    "delete_user_record",
+    "list_users_records",
+    "create_user",
+    "update_user",
+    "delete_user",
+    "list_users",
+    "get_assignment_by_id",
+    "create_assignment_record",
+    "update_assignment_record",
+    "delete_assignment_record",
+    "list_assignments_records",
+    "create_assignment",
+    "update_assignment",
+    "delete_assignment",
+    "list_assignments"
+]
+

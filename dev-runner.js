@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 
-const flask = spawn('python3', ['app.py'], {
+const flask = spawn('python3', ['backend/app.py'], {
   env: { ...process.env, FLASK_PORT: '5001' },
   stdio: 'inherit'
 });

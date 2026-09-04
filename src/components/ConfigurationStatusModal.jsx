@@ -17,7 +17,7 @@ export function ConfigurationStatusModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const copySqlSchema = () => {
-    navigator.clipboard.writeText('-- Run schema.sql from the project root in your Supabase SQL Editor');
+    navigator.clipboard.writeText('-- Run backend/schemas/schema.sql in your Supabase SQL Editor');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -62,7 +62,7 @@ export function ConfigurationStatusModal({ isOpen, onClose }) {
 
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-400">PostgreSQL Schema:</span>
-            <span className="font-mono text-slate-300">schema.sql (13 Tables, RLS Enabled)</span>
+            <span className="font-mono text-slate-300">backend/schemas/schema.sql (13 Tables, RLS Enabled)</span>
           </div>
 
           <div className="flex items-center justify-between text-xs">
@@ -78,7 +78,7 @@ export function ConfigurationStatusModal({ isOpen, onClose }) {
           <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-lg space-y-2">
             <div className="font-semibold text-indigo-300">1. Run Database Migrations</div>
             <p className="text-slate-400">
-              Open your Supabase Project Dashboard &gt; SQL Editor, and execute the complete contents of <code className="text-slate-200 bg-slate-800 px-1 py-0.5 rounded">schema.sql</code> and <code className="text-slate-200 bg-slate-800 px-1 py-0.5 rounded">storage-policies.sql</code>.
+              Open your Supabase Project Dashboard &gt; SQL Editor, and execute the complete contents of <code className="text-slate-200 bg-slate-800 px-1 py-0.5 rounded">backend/schemas/schema.sql</code> and <code className="text-slate-200 bg-slate-800 px-1 py-0.5 rounded">backend/schemas/storage-policies.sql</code>.
             </p>
           </div>
 

@@ -7,8 +7,8 @@
     "dev": "node dev-runner.js --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "python3 app.py",
-    "test": "pytest tests/ -v",
+    "start": "python3 backend/app.py",
+    "test": "pytest backend/tests/ -v",
     "clean": "rm -rf dist",
     "lint": "echo 'No lint errors'"
   },

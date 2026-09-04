@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from './context/AuthContext';
+import { useAuth, ProtectedRoute } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { AcademicIntegrityBanner } from './components/AcademicIntegrityBanner';
 import { ConfigurationStatusModal } from './components/ConfigurationStatusModal';
@@ -51,23 +51,128 @@ export function App() {
 
         {/* Client Routes */}
         {currentTab === 'client-overview' && (
-          <ClientDashboard initialSubTab="overview" />
+          <ProtectedRoute
+            allowedRoles={['Client', 'Admin']}
+            fallback={
+              <div className="max-w-md mx-auto my-16 p-8 bg-slate-900/60 border border-slate-800 rounded-2xl text-center shadow-2xl">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 mx-auto flex items-center justify-center mb-4">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-100 mb-2">Authentication Required</h2>
+                <p className="text-sm text-slate-400 mb-6">
+                  Please sign in to access the Client Workspace and manage your projects.
+                </p>
+                <button
+                  onClick={() => openAuth('login')}
+                  className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-indigo-600/20 cursor-pointer"
+                >
+                  Sign In to Continue
+                </button>
+              </div>
+            }
+          >
+            <ClientDashboard initialSubTab="overview" />
+          </ProtectedRoute>
         )}
         {currentTab === 'client-create' && (
-          <ClientDashboard initialSubTab="create" />
+          <ProtectedRoute
+            allowedRoles={['Client', 'Admin']}
+            fallback={
+              <div className="max-w-md mx-auto my-16 p-8 bg-slate-900/60 border border-slate-800 rounded-2xl text-center shadow-2xl">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 mx-auto flex items-center justify-center mb-4">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-100 mb-2">Commission Assignment</h2>
+                <p className="text-sm text-slate-400 mb-6">
+                  Sign in or create an account to post assignments and deposit escrow safely.
+                </p>
+                <button
+                  onClick={() => openAuth('login')}
+                  className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-indigo-600/20 cursor-pointer"
+                >
+                  Sign In to Post
+                </button>
+              </div>
+            }
+          >
+            <ClientDashboard initialSubTab="create" />
+          </ProtectedRoute>
         )}
 
         {/* Writer Routes */}
         {currentTab === 'writer-marketplace' && (
-          <WriterDashboard initialSubTab="marketplace" />
+          <ProtectedRoute
+            allowedRoles={['Writer', 'Admin']}
+            fallback={
+              <div className="max-w-md mx-auto my-16 p-8 bg-slate-900/60 border border-slate-800 rounded-2xl text-center shadow-2xl">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 mx-auto flex items-center justify-center mb-4">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-100 mb-2">Specialist Portal</h2>
+                <p className="text-sm text-slate-400 mb-6">
+                  Sign in with an approved Specialist or Writer account to browse assignments.
+                </p>
+                <button
+                  onClick={() => openAuth('login')}
+                  className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-indigo-600/20 cursor-pointer"
+                >
+                  Sign In as Specialist
+                </button>
+              </div>
+            }
+          >
+            <WriterDashboard initialSubTab="marketplace" />
+          </ProtectedRoute>
         )}
         {currentTab === 'writer-workspace' && (
-          <WriterDashboard initialSubTab="workspace" />
+          <ProtectedRoute
+            allowedRoles={['Writer', 'Admin']}
+            fallback={
+              <div className="max-w-md mx-auto my-16 p-8 bg-slate-900/60 border border-slate-800 rounded-2xl text-center shadow-2xl">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 mx-auto flex items-center justify-center mb-4">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-100 mb-2">Specialist Workspace</h2>
+                <p className="text-sm text-slate-400 mb-6">
+                  Sign in to view your active claimed contracts and deliver submissions.
+                </p>
+                <button
+                  onClick={() => openAuth('login')}
+                  className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-indigo-600/20 cursor-pointer"
+                >
+                  Sign In to Continue
+                </button>
+              </div>
+            }
+          >
+            <WriterDashboard initialSubTab="workspace" />
+          </ProtectedRoute>
         )}
 
         {/* Admin Route */}
         {currentTab.startsWith('admin') && (
-          <AdminDashboard />
+          <ProtectedRoute
+            allowedRoles={['Admin']}
+            fallback={
+              <div className="max-w-md mx-auto my-16 p-8 bg-rose-950/20 border border-rose-900/40 rounded-2xl text-center shadow-2xl">
+                <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 mx-auto flex items-center justify-center mb-4">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-rose-200 mb-2">Restricted Command Center</h2>
+                <p className="text-sm text-slate-400 mb-6">
+                  Access requires an active Administrator session with cryptographic JWT verification.
+                </p>
+                <button
+                  onClick={() => openAuth('login')}
+                  className="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-rose-600/20 cursor-pointer"
+                >
+                  Admin Sign In
+                </button>
+              </div>
+            }
+          >
+            <AdminDashboard />
+          </ProtectedRoute>
         )}
 
         {/* Shared Financial & Dispute Views */}

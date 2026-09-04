@@ -1,6 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, isSupabaseConfigured } from '../services/supabase';
-import { api } from '../services/api';
+import { createClient } from '@supabase/supabase-js';
+
+// Resolve Supabase configuration from Vite or standard environment
+const supabaseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL)
+  || (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL)
+  || '';
+
+const supabaseAnonKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY)
+  || (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY)
+  || '';
+
+export const isSupabaseConfigured = Boolean(
+  supabaseUrl &&
+  supabaseAnonKey &&
+  !supabaseUrl.includes('your-project')
+);
+
+// Instantiate authoritative client-side Supabase client
+export const supabase = isSupabaseConfigured
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 export const AuthContext = createContext(null);
 
@@ -18,15 +37,24 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
-  const fetchProfile = async () => {
+  // Fetch verified user profile from backend database
+  const fetchProfile = async (accessToken) => {
     try {
-      const data = await api.getMe();
-      if (data?.user) {
-        setProfile(data.user);
-        return data.user;
+      const token = accessToken || session?.access_token;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const res = await fetch('/api/me', { headers });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.user) {
+          setProfile(data.user);
+          return data.user;
+        }
       }
     } catch (err) {
-      console.warn('Failed to fetch profile from /api/me:', err.message);
+      console.warn('Could not fetch user profile from /api/me:', err);
     }
     return null;
   };
@@ -39,32 +67,36 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    // 1. Check active session
+    // 1. Initial session resolution
     supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
       if (!isMounted) return;
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
       if (initialSession) {
-        await fetchProfile();
+        await fetchProfile(initialSession.access_token);
       }
       setLoading(false);
     }).catch(err => {
-      console.error('Error getting initial session:', err);
+      console.error('Failed to resolve initial Supabase session:', err);
       if (isMounted) setLoading(false);
     });
 
-    // 2. Listen for real-time auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      if (!isMounted) return;
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
-      if (newSession) {
-        await fetchProfile();
-      } else {
-        setProfile(null);
+    // 2. Real-time auth state subscription
+    const { credentialsSubscription, data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        if (!isMounted) return;
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        if (newSession) {
+          await fetchProfile(newSession.access_token);
+        } else {
+          setProfile(null);
+        }
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    );
+
+    const subscription = authListener?.subscription || credentialsSubscription;
 
     return () => {
       isMounted = false;
@@ -74,9 +106,12 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  /**
+   * Log in an existing user with email and password
+   */
   const login = async (email, password) => {
     if (!isSupabaseConfigured || !supabase) {
-      throw new Error('Supabase is not configured. Please supply credentials in Settings.');
+      throw new Error('Supabase configuration unavailable. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
     }
     setAuthError(null);
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -87,13 +122,20 @@ export function AuthProvider({ children }) {
       setAuthError(error.message);
       throw error;
     }
-    await fetchProfile();
+    if (data?.session) {
+      setSession(data.session);
+      setUser(data.session.user);
+      await fetchProfile(data.session.access_token);
+    }
     return data;
   };
 
-  const register = async ({ email, password, fullName, role, referralCode }) => {
+  /**
+   * Register a new user with metadata (fullName, role, referralCode)
+   */
+  const register = async ({ email, password, fullName, role = 'Client', referralCode = null }) => {
     if (!isSupabaseConfigured || !supabase) {
-      throw new Error('Supabase is not configured. Please supply credentials in Settings.');
+      throw new Error('Supabase configuration unavailable. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
     }
     setAuthError(null);
     const { data, error } = await supabase.auth.signUp({
@@ -102,25 +144,32 @@ export function AuthProvider({ children }) {
       options: {
         data: {
           full_name: fullName,
-          role: role || 'Client',
-          referral_code_used: referralCode || null,
-        }
-      }
+          role,
+          referral_code_used: referralCode,
+        },
+      },
     });
     if (error) {
       setAuthError(error.message);
       throw error;
     }
-    await fetchProfile();
+    if (data?.session) {
+      setSession(data.session);
+      setUser(data.session.user);
+      await fetchProfile(data.session.access_token);
+    }
     return data;
   };
 
+  /**
+   * Sign out current user
+   */
   const logout = async () => {
     if (supabase) {
       try {
         await supabase.auth.signOut();
       } catch (err) {
-        console.warn('Error during sign out:', err);
+        console.warn('Error signing out from Supabase:', err);
       }
     }
     setSession(null);
@@ -129,8 +178,11 @@ export function AuthProvider({ children }) {
     setAuthError(null);
   };
 
+  /**
+   * Explicitly refresh user profile and session state
+   */
   const refreshProfile = async () => {
-    await fetchProfile();
+    return await fetchProfile();
   };
 
   const contextValue = {
@@ -159,7 +211,7 @@ export function AuthProvider({ children }) {
 }
 
 /**
- * Custom React hook to consume AuthContext
+ * Custom React hook to access authentication context
  */
 export function useAuth() {
   const context = useContext(AuthContext);
@@ -220,6 +272,9 @@ export function ProtectedRoute({
   return children;
 }
 
+/**
+ * RequireAuth alias for route protection
+ */
 export const RequireAuth = ProtectedRoute;
 
 export default AuthContext;

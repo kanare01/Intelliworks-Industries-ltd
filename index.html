@@ -12,6 +12,46 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        try {
+          var targetObj = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
+          if (targetObj) {
+            var origFetch = targetObj.fetch;
+            var activeFetch = origFetch ? function() {
+              return origFetch.apply(this || targetObj, arguments);
+            } : null;
+
+            // Ensure window.fetch has both a getter and a setter so reassignments or wrapping don't throw
+            Object.defineProperty(targetObj, 'fetch', {
+              get: function() {
+                return activeFetch;
+              },
+              set: function(fn) {
+                activeFetch = fn;
+              },
+              configurable: true,
+              enumerable: true
+            });
+
+            if (typeof globalThis !== 'undefined' && globalThis !== targetObj) {
+              Object.defineProperty(globalThis, 'fetch', {
+                get: function() {
+                  return activeFetch;
+                },
+                set: function(fn) {
+                  activeFetch = fn;
+                },
+                configurable: true,
+                enumerable: true
+              });
+            }
+          }
+        } catch (e) {
+          // Fallback if property is non-configurable
+        }
+      })();
+    </script>
   </head>
   <body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white min-h-screen">
     <div id="root"></div>
