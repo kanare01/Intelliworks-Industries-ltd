@@ -1,0 +1,6 @@
+{
+  "name": "Intelliworks Industries",
+  "description": "Enterprise academic and professional services marketplace with escrow accounting, verification, assignment lifecycle, Supabase auth, and audit logging.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
